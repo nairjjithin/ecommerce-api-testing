@@ -1,0 +1,77 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "type": ["string", "null"]
+        },
+        "email": {
+          "type": "string", 
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "imageId": {
+          "type": ["string", "null"]
+        },
+        "jwtToken": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["SHOPPER","ADMIN"]
+        },
+        "state": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "number"
+        },
+        "zoneId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "city",
+        "country",
+        "createdDateTime",
+        "email",
+        "firstName",
+        "imageId",
+        "jwtToken",
+        "lastName",
+        "role",
+        "state",
+        "status",
+        "userId",
+        "zoneId"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "data",
+    "message",
+    "statusCode"
+  ]
+}

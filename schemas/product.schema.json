@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "createdDateTime": {
+            "type": ["string", "null"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "merchantId": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "offer": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "productId": {
+            "type": "number"
+          },
+          "productImageURLs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "reviews": {
+            "type": ["array", "null"],
+            "items": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": ["string", "null"]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "heading": {
+                  "type": "string"
+                },
+                "rating": {
+                  "type": "number"
+                },
+                "shopperId": {
+                  "type": "number"
+                },
+                "shopperName": {
+                  "type": ["string", "null"]
+                }
+              },
+              "required": [
+                "description",
+                "heading",
+                "rating",
+                "shopperId",
+                "shopperName"
+              ]
+            }
+          },
+          "searchTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string"
+          },
+          "thumbnailURL": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "string"
+          }
+        },
+        "required": [
+            "name",
+            "price",
+            "productId",
+            "status",
+            "zoneId"
+        ]
+      }
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "data",
+    "message",
+    "statusCode"
+  ]
+}

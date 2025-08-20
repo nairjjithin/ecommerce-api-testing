@@ -1,0 +1,1047 @@
+{
+	"info": {
+		"_postman_id": "e1e5072b-27e6-4cf3-98df-e819484f8d26",
+		"name": "ShoppersStack API Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11091076"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Shopper Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /login\r",
+									"// Purpose : Verify login functionality and response\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check the response status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check the status text contains \"OK\"\r",
+									"pm.test(\"Status code name has string OK\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Check that the response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Check that the API responds with JSON\r",
+									"// Use \"include\" because servers often append charset (e.g., \"; charset=utf-8\")\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    const ct = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();\r",
+									"    pm.expect(ct).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"// Parse the response body as JSON and log it in a readable format\r",
+									"const json = pm.response.json();\r",
+									"console.log(JSON.stringify(json, null, 2));\r",
+									"\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"loginSchema\");\r",
+									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the login schema\r",
+									"pm.test(\"Response matches schema\", function () {\r",
+									"    pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Check that a token is present in the response\r",
+									"pm.test(\"Token is present\", function () {\r",
+									"    pm.expect(json.data.jwtToken, \"Token Missing\").to.exist;\r",
+									"});\r",
+									"\r",
+									"// If token is present, save it into environment variable for reuse\r",
+									"if (json.data && json.data.jwtToken) {\r",
+									"    pm.environment.set(\"jwtToken\", json.data.jwtToken);\r",
+									"}\r",
+									"\r",
+									"// Validate that the role matches the expected environment variable\r",
+									"pm.test(\"Role is SHOPPER\", function () {\r",
+									"    pm.expect(json.data.role, \"Unexpected Role\").to.eql(pm.environment.get(\"role\"));\r",
+									"});\r",
+									"\r",
+									"// Validate that the email matches the expected environment variable\r",
+									"pm.test(\"Email is valid\", function () {\r",
+									"    pm.expect(json.data.email, \"Email invalid\").to.eql(pm.environment.get(\"email\"));\r",
+									"});\r",
+									"\r",
+									"// Save shopperId into environment variable for later requests\r",
+									"if (json.data && json.data.userId !== undefined && json.data.userId !== null) {\r",
+									"    pm.environment.set(\"shopperId\", json.data.userId);\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"loginSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/main/schemas/login.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"loginSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\",\r\n  \"role\": \"{{role}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "List Default Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /products\r",
+									"// Purpose : Verify product listing API response and extract a productId\r",
+									"//           for use in subsequent requests.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check the response status code is exactly 200 (OK)\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check the response status text is \"OK\"\r",
+									"// Postman allows status checks by both code and status text\r",
+									"pm.test(\"Status code name has string OK\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Check that the response time is less than 3000 milliseconds\r",
+									"// Helps ensure the API is performing within acceptable limits\r",
+									"pm.test(\"Response time is less than 3000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(3000);\r",
+									"});\r",
+									"\r",
+									"// Parse response body into JSON for further checks\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Get schema string from collection-level variable called \"productSchema\"\r",
+									"// Schemas can be stored as variables to keep tests cleaner and reusable\r",
+									"const schemaString = pm.collectionVariables.get(\"productSchema\");\r",
+									"\r",
+									"// Parse the schema string into a JavaScript object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate the response body against the JSON schema\r",
+									"// Ensures the API contract is followed (correct fields, types, etc.)\r",
+									"pm.test(\"Response matches schema\", function () {\r",
+									"    pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Check that the response has a data array and it is not empty\r",
+									"pm.test(\"data is a non-empty array\", function () {\r",
+									"    pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;\r",
+									"});\r",
+									"\r",
+									"// Collect all objects from the data array that have a valid productId\r",
+									"const productsWithId = (json.data || []).filter(p => p?.productId != null);\r",
+									"\r",
+									"// If no valid productId is found, throw an error to stop execution\r",
+									"if (productsWithId.length === 0) {\r",
+									"    throw new Error(\"No items in 'data' have a valid productId.\");\r",
+									"}\r",
+									"\r",
+									"// Save the first valid productId as an environment variable for use in later requests\r",
+									"pm.environment.set(\"productId\", productsWithId[0].productId);\r",
+									"\r",
+									"// Debug log to confirm what got saved\r",
+									"console.log(\"Saved productId:\", productsWithId[0].productId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// If the collection variable \"productSchema\" is not already set\r",
+									"if (!pm.collectionVariables.get(\"productSchema\")) {\r",
+									"    \r",
+									"    // Fetch the JSON schema file from GitHub raw URL\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/main/schemas/product.schema.json\", (err, res) => {\r",
+									"        \r",
+									"        // If request failed OR response code is not 200, log error and stop\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        \r",
+									"        // Otherwise, save the schema text into the collection variable\r",
+									"        // This makes the schema reusable in any request of this collection\r",
+									"        pm.collectionVariables.set(\"productSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/products/alpha",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"products",
+								"alpha"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wishlist",
+			"item": [
+				{
+					"name": "Add to Wishlist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /wishlist\r",
+									"// Purpose : Verify that a product can be added to the wishlist and\r",
+									"//           that response values (productId, quantity) match expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check that the response status code is 201 (Created)\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// Check that the response status text is \"Created\"\r",
+									"// Postman allows status checks by both numeric code and status text\r",
+									"pm.test(\"Status code name has string Created\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");\r",
+									"});\r",
+									"\r",
+									"// Check that the response time is less than 1000 milliseconds\r",
+									"// Ensures the API is performing within strict performance limits\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Parse the response body as JSON\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Validate that the productId returned in the response\r",
+									"// matches the productId saved earlier in the environment\r",
+									"pm.test(\"Validate ProductId\", function () {\r",
+									"    console.log(\"productId:\", json.data.productId); // Debug log\r",
+									"    const requestedProductId = pm.environment.get(\"productId\"); // stored earlier\r",
+									"    // Assertion: Response productId must equal requested productId\r",
+									"    pm.expect(json.data.productId).to.eql(Number(requestedProductId));\r",
+									"});\r",
+									"\r",
+									"// Validate that the quantity in the response matches the requested quantity\r",
+									"pm.test(\"Validate Quantity\", function () {\r",
+									"    console.log(\"quantity:\", json.data.quantity); // Debug log\r",
+									"    const requestedQuantity = pm.environment.get(\"quantity\"); // stored earlier\r",
+									"    // Assertion: Response quantity must equal requested quantity\r",
+									"    pm.expect(json.data.quantity).to.eql(Number(requestedQuantity));\r",
+									"});\r",
+									"\r",
+									"/*// Retrieve itemId and save as environment variable for later use\r",
+									"const itemId = pm.environment.set(\"itemId\", json.data[0].itemId);*/"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"productId\": {{productId}},\r\n  \"quantity\": {{quantity}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/wishlist",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"wishlist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wishlist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /wishlist - Single Product Validation\r",
+									"// Purpose : Ensure that a product added to wishlist is returned\r",
+									"//           correctly in the wishlist response.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Validate status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Validate status text is 'OK'\r",
+									"pm.test(\"Status code name is OK\", function () {\r",
+									"  pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Validate response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Parse response body into JSON\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Validate response contains a non-empty 'data' array\r",
+									"pm.test(\"Response contains non-empty wishlist array\", function () {\r",
+									"  pm.expect(json).to.have.property(\"data\");\r",
+									"  pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;\r",
+									"});\r",
+									"\r",
+									"// Extract productIds from the wishlist (filter out null/undefined, then map to ids)\r",
+									"const returnedIds = (json.data || [])\r",
+									"  .filter(p => p?.productId != null)\r",
+									"  .map(p => p.productId);\r",
+									"\r",
+									"// Fail fast if no productId was returned\r",
+									"if (returnedIds.length === 0) {\r",
+									"  throw new Error(\"No productId found in wishlist response\");\r",
+									"}\r",
+									"\r",
+									"// Validate the requested productId is present in the wishlist\r",
+									"pm.test(\"Wishlist contains the requested productId\", function () {\r",
+									"  // Retrieve the productId saved in environment during Add-to-Wishlist\r",
+									"  const requestedId = pm.environment.get(\"productId\");\r",
+									"\r",
+									"  // Debug logs\r",
+									"  console.log(\"Requested productId:\", requestedId);\r",
+									"  console.log(\"Returned productIds:\", returnedIds);\r",
+									"\r",
+									"  // Assertion: Returned IDs should include the stored environment productId\r",
+									"  pm.expect(returnedIds, \"Requested productId not found in wishlist\")\r",
+									"    .to.include(Number(requestedId));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/wishlist",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"wishlist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove From Wishlist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: DELETE /wishlist\r",
+									"// Purpose : Verify that a product can be removed from the wishlist\r",
+									"//           and that the API responds with correct status codes.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Validate that the response status code is 204 (No Content)\r",
+									"// 204 indicates the operation succeeded and no payload should be returned.\r",
+									"pm.test(\"Status code is 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});\r",
+									"\r",
+									"// Validate that the response status text is \"No Content\"\r",
+									"// Confirms the textual representation matches the numeric status.\r",
+									"pm.test(\"Status text is No Content\", function () {\r",
+									"    pm.response.to.have.status(\"No Content\");\r",
+									"});\r",
+									"\r",
+									"// Validate that the response time is below 1000ms\r",
+									"// Ensures the DELETE operation meets basic performance expectations.\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Read the raw response body as text for verification\r",
+									"const bodyText = pm.response.text();\r",
+									"\r",
+									"// Log the raw body for troubleshooting/visibility in the Postman console\r",
+									"console.log(\"DELETE body:\", bodyText);\r",
+									"\r",
+									"// Assert that the body is empty (after trimming whitespace)\r",
+									"// 204 responses must not include a message body; trim() ignores stray spaces/newlines.\r",
+									"pm.expect(bodyText.trim()).to.have.length(0);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/wishlist/{{productId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"wishlist",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Add to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /wishlist\r",
+									"// Purpose : Verify that a product can be added to the  Cart\r",
+									"//           and that response values (productId, quantity) match expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Verify that the response status code is 201 (Created)\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// Verify that the response status text is \"Created\"\r",
+									"pm.test(\"Status code name has string Created\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");\r",
+									"});\r",
+									"\r",
+									"// Verify that the response time is less than 1000 milliseconds\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"const schema = {\r",
+									"  \"type\": \"object\",\r",
+									"  \"properties\": {\r",
+									"    \"data\": {\r",
+									"      \"type\": \"object\",\r",
+									"      \"properties\": {\r",
+									"        \"productId\": {\r",
+									"          \"type\": \"number\"\r",
+									"        },\r",
+									"        \"quantity\": {\r",
+									"          \"type\": \"number\"\r",
+									"        }\r",
+									"      },\r",
+									"      \"additionalProperties\": true,\r",
+									"      \"required\": [\r",
+									"        \"productId\",\r",
+									"        \"quantity\"\r",
+									"      ]\r",
+									"    },\r",
+									"    \"message\": {\r",
+									"      \"type\": \"string\"\r",
+									"    },\r",
+									"    \"statusCode\": {\r",
+									"      \"type\": \"number\"\r",
+									"    }\r",
+									"  },\r",
+									"  \"additionalProperties\": true,\r",
+									"  \"required\": [\r",
+									"    \"data\",\r",
+									"    \"message\",\r",
+									"    \"statusCode\"\r",
+									"  ]\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Parse the response body into JSON for further validation\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Validate that the productId returned in the response\r",
+									"// matches the productId saved earlier in the environment\r",
+									"pm.test(\"Validate ProductId\", function () {\r",
+									"    console.log(\"productId:\", json.data.productId); // Debug log for troubleshooting\r",
+									"    const requestedId = pm.environment.get(\"productId\"); // Environment-stored productId\r",
+									"    // Assertion: Response productId must equal requestedId\r",
+									"    pm.expect(json.data.productId).to.eql(Number(requestedId));\r",
+									"});\r",
+									"\r",
+									"// Validate that the quantity in the response\r",
+									"// matches the requested quantity saved earlier in the environment\r",
+									"pm.test(\"Validate Quantity\", function () {\r",
+									"    console.log(\"quantity:\", json.data.quantity); // Debug log for troubleshooting\r",
+									"    const requestedQuantity = pm.environment.get(\"quantity\"); // Environment-stored quantity\r",
+									"    // Assertion: Response quantity must equal requestedQuantity\r",
+									"    pm.expect(json.data.quantity).to.eql(Number(requestedQuantity));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"productId\": {{productId}},\r\n  \"quantity\": {{quantity}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cartlist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /cartlist - Single Product Validation\r",
+									"// Purpose : Ensure that a product added to the cart appears in the cartlist.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Validate status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Validate status text is 'OK'\r",
+									"pm.test(\"Status code name is OK\", function () {\r",
+									"  pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Validate response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"const schema = {\r",
+									"  \"type\": \"object\",\r",
+									"  \"properties\": {\r",
+									"    \"data\": {\r",
+									"      \"type\": \"array\",\r",
+									"      \"items\": {\r",
+									"        \"type\": \"object\",\r",
+									"        \"properties\": {\r",
+									"          \"productId\": { \"type\": \"number\" },\r",
+									"          \"quantity\":  { \"type\": \"number\" }\r",
+									"        },\r",
+									"        \"additionalProperties\": true,\r",
+									"        \"required\": [\"productId\", \"quantity\"]\r",
+									"      }\r",
+									"    },\r",
+									"    \"message\": { \"type\": \"string\" },\r",
+									"    \"statusCode\": { \"type\": \"number\" }\r",
+									"  },\r",
+									"  \"additionalProperties\": true,\r",
+									"  \"required\": [\"data\", \"message\", \"statusCode\"]\r",
+									"};\r",
+									"\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Parse response body into JSON\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Read the requested productId from environment ONCE, reuse below\r",
+									"const requestedProductId = Number(pm.environment.get(\"productId\"));\r",
+									"\r",
+									"// Extract productIds from the cart (filter null/undefined, then map to ids)\r",
+									"const cartProductIds = (json.data || [])\r",
+									"  .filter(item => item?.productId != null)\r",
+									"  .map(item => item.productId);\r",
+									"\r",
+									"// Fail fast if no productId was returned\r",
+									"if (cartProductIds.length === 0) {\r",
+									"  throw new Error(\"No productId found in cartlist response\");\r",
+									"}\r",
+									"\r",
+									"// Validate the requested productId is present in the cart\r",
+									"pm.test(\"Cart contains the requested productId\", function () {\r",
+									"  console.log(\"Requested productId:\", requestedProductId);\r",
+									"  console.log(\"Cart productIds:\", cartProductIds);\r",
+									"  pm.expect(cartProductIds, \"Requested productId not found in cartlist\")\r",
+									"    .to.include(requestedProductId);\r",
+									"});\r",
+									"\r",
+									"// Find the product object whose productId equals the saved environment variable\r",
+									"const product = (json.data || []).find(p => Number(p.productId) === requestedProductId);\r",
+									"\r",
+									"// Fail if not found\r",
+									"if (!product) {\r",
+									"  throw new Error(`Requested productId not found in cartlist response`);\r",
+									"}\r",
+									"\r",
+									"\r",
+									"// Save its itemId to environment\r",
+									"pm.environment.set(\"itemId\", product.itemId);\r",
+									"\r",
+									"// Debug log\r",
+									"console.log(\"Saved itemId:\", product.itemId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: PUT /cart (Update Quantity)\r",
+									"// Purpose : Validate success response, schema (object-shaped `data`),\r",
+									"//           and that the updated quantity matches the expected value.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check the response status code is 200 (OK)\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check the response status text is \"OK\"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Check that the response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Parse the response body as JSON and pretty-print to console for debugging\r",
+									"const json = pm.response.json();\r",
+									"console.log(JSON.stringify(json, null, 2));\r",
+									"\r",
+									"// JSON Schema for this endpoint: `data` is an OBJECT with productId and quantity.\r",
+									"// Note: using \"number\" + \"minimum: 1\" here (IDs/quantities should be positive).\r",
+									"const schema = {\r",
+									"  \"type\": \"object\",\r",
+									"  \"properties\": {\r",
+									"    \"data\": {\r",
+									"      \"type\": \"object\",\r",
+									"      \"properties\": {\r",
+									"        \"productId\": { \"type\": \"number\", \"minimum\": 1 },\r",
+									"        \"quantity\":  { \"type\": \"number\", \"minimum\": 1 }\r",
+									"      },\r",
+									"      \"additionalProperties\": true,\r",
+									"      \"required\": [\"productId\", \"quantity\"]\r",
+									"    },\r",
+									"    \"message\":    { \"type\": \"string\" },\r",
+									"    \"statusCode\": { \"type\": \"number\" }\r",
+									"  },\r",
+									"  \"additionalProperties\": true,\r",
+									"  \"required\": [\"data\", \"message\", \"statusCode\"]\r",
+									"};\r",
+									"\r",
+									"// Validate the response body against the schema (object-shaped `data`)\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Validate that `data` is a non-empty OBJECT (per example response shape)\r",
+									"pm.test(\"Response contains non-empty data object\", function () {\r",
+									"  pm.expect(json).to.have.property(\"data\");\r",
+									"  pm.expect(json.data).to.be.an(\"object\").that.is.not.empty;\r",
+									"});\r",
+									"\r",
+									"// Read expected quantity from environment (env vars are strings → coerce to Number)\r",
+									"const updatedQuantity = Number(pm.environment.get(\"quantity2\"));\r",
+									"\r",
+									"// Assertion: the returned `quantity` equals the expected updated value\r",
+									"pm.test(\"Validate that the quantity of requested product is updated\", function () {\r",
+									"  pm.expect(json).to.have.property(\"data\");\r",
+									"  pm.expect(json.data).to.be.an(\"object\");\r",
+									"  pm.expect(json.data.quantity).to.eql(updatedQuantity);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"productId\": {{productId}},\r\n  \"quantity\": {{quantity2}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts/{{itemId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete from Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: DELETE /cart\r",
+									"// Purpose : Verify the delete operation succeeds with 200 OK\r",
+									"//           and meets basic performance expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Test: Response status code must be 200 (OK) for successful delete\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Test: Response status text should be \"OK\"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Test: Operation completes within 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts/{{productId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "loginSchema",
+			"value": ""
+		},
+		{
+			"key": "productSchema",
+			"value": ""
+		}
+	]
+}

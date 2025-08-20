@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "productId",
+        "quantity"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": true,
+  "required": [
+    "data",
+    "message",
+    "statusCode"
+  ]
+}

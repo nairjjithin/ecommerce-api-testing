@@ -1,0 +1,18 @@
+git switch main
+git pull --ff-only
+git switch -c feat/postman-collections-cart
+
+# add exported Postman collections
+git add collections/*.json
+git commit -m "feat(collections): add ShoppersStack Postman collection (Auth, Product, Wishlist, Cart) with tests up to Cart"
+
+# add .gitignore to ignore environments
+echo environments/>>.gitignore
+echo *.postman_environment.json>>.gitignore
+# (add the rest of ignores as needed)
+git add .gitignore
+git commit -m "chore(gitignore): ignore Postman environments and local tooling artifacts"
+
+# push branch and open PR
+git push -u origin feat/postman-collections-cart
+# then open PR on GitHub UI

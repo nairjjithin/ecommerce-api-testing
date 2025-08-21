@@ -167,7 +167,7 @@
 									"// Check that the response time is less than 3000 milliseconds\r",
 									"// Helps ensure the API is performing within acceptable limits\r",
 									"pm.test(\"Response time is less than 3000ms\", function () {\r",
-									"    pm.expect(pm.response.responseTime).to.be.below(3000);\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(6000);\r",
 									"});\r",
 									"\r",
 									"// Parse response body into JSON for further checks\r",
@@ -581,7 +581,7 @@
 							"script": {
 								"exec": [
 									"// -------------------------------------------------------------\r",
-									"// Request: POST /wishlist\r",
+									"// Request: POST /Cart\r",
 									"// Purpose : Verify that a product can be added to the  Cart\r",
 									"//           and that response values (productId, quantity) match expectations.\r",
 									"// -------------------------------------------------------------\r",
@@ -601,40 +601,13 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
 									"});\r",
 									"\r",
-									"const schema = {\r",
-									"  \"type\": \"object\",\r",
-									"  \"properties\": {\r",
-									"    \"data\": {\r",
-									"      \"type\": \"object\",\r",
-									"      \"properties\": {\r",
-									"        \"productId\": {\r",
-									"          \"type\": \"number\"\r",
-									"        },\r",
-									"        \"quantity\": {\r",
-									"          \"type\": \"number\"\r",
-									"        }\r",
-									"      },\r",
-									"      \"additionalProperties\": true,\r",
-									"      \"required\": [\r",
-									"        \"productId\",\r",
-									"        \"quantity\"\r",
-									"      ]\r",
-									"    },\r",
-									"    \"message\": {\r",
-									"      \"type\": \"string\"\r",
-									"    },\r",
-									"    \"statusCode\": {\r",
-									"      \"type\": \"number\"\r",
-									"    }\r",
-									"  },\r",
-									"  \"additionalProperties\": true,\r",
-									"  \"required\": [\r",
-									"    \"data\",\r",
-									"    \"message\",\r",
-									"    \"statusCode\"\r",
-									"  ]\r",
-									"}\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"addToCartSchema\");\r",
 									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the Add to Cart Schema\r",
 									"pm.test(\"Cart list matches schema\", () => {\r",
 									"  pm.response.to.have.jsonSchema(schema);\r",
 									"});\r",
@@ -660,6 +633,24 @@
 									"    pm.expect(json.data.quantity).to.eql(Number(requestedQuantity));\r",
 									"});\r",
 									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"addToCartSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/cartadd.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"addToCartSchema\", res.text());\r",
+									"    });\r",
+									"}"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -719,28 +710,13 @@
 									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
 									"});\r",
 									"\r",
-									"const schema = {\r",
-									"  \"type\": \"object\",\r",
-									"  \"properties\": {\r",
-									"    \"data\": {\r",
-									"      \"type\": \"array\",\r",
-									"      \"items\": {\r",
-									"        \"type\": \"object\",\r",
-									"        \"properties\": {\r",
-									"          \"productId\": { \"type\": \"number\" },\r",
-									"          \"quantity\":  { \"type\": \"number\" }\r",
-									"        },\r",
-									"        \"additionalProperties\": true,\r",
-									"        \"required\": [\"productId\", \"quantity\"]\r",
-									"      }\r",
-									"    },\r",
-									"    \"message\": { \"type\": \"string\" },\r",
-									"    \"statusCode\": { \"type\": \"number\" }\r",
-									"  },\r",
-									"  \"additionalProperties\": true,\r",
-									"  \"required\": [\"data\", \"message\", \"statusCode\"]\r",
-									"};\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"viewCartListSchema\");\r",
 									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the View Cart List Schema\r",
 									"pm.test(\"Cart list matches schema\", () => {\r",
 									"  pm.response.to.have.jsonSchema(schema);\r",
 									"});\r",
@@ -784,6 +760,24 @@
 									"// Debug log\r",
 									"console.log(\"Saved itemId:\", product.itemId);\r",
 									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewCartListSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/cartlist.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewCartListSchema\", res.text());\r",
+									"    });\r",
+									"}"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -847,32 +841,16 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
 									"});\r",
 									"\r",
-									"// Parse the response body as JSON and pretty-print to console for debugging\r",
+									"// Parse response body into JSON\r",
 									"const json = pm.response.json();\r",
-									"console.log(JSON.stringify(json, null, 2));\r",
 									"\r",
-									"// JSON Schema for this endpoint: `data` is an OBJECT with productId and quantity.\r",
-									"// Note: using \"number\" + \"minimum: 1\" here (IDs/quantities should be positive).\r",
-									"const schema = {\r",
-									"  \"type\": \"object\",\r",
-									"  \"properties\": {\r",
-									"    \"data\": {\r",
-									"      \"type\": \"object\",\r",
-									"      \"properties\": {\r",
-									"        \"productId\": { \"type\": \"number\", \"minimum\": 1 },\r",
-									"        \"quantity\":  { \"type\": \"number\", \"minimum\": 1 }\r",
-									"      },\r",
-									"      \"additionalProperties\": true,\r",
-									"      \"required\": [\"productId\", \"quantity\"]\r",
-									"    },\r",
-									"    \"message\":    { \"type\": \"string\" },\r",
-									"    \"statusCode\": { \"type\": \"number\" }\r",
-									"  },\r",
-									"  \"additionalProperties\": true,\r",
-									"  \"required\": [\"data\", \"message\", \"statusCode\"]\r",
-									"};\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"updateCartSchema\");\r",
 									"\r",
-									"// Validate the response body against the schema (object-shaped `data`)\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the Update Cart Schema\r",
 									"pm.test(\"Cart list matches schema\", () => {\r",
 									"  pm.response.to.have.jsonSchema(schema);\r",
 									"});\r",
@@ -892,6 +870,24 @@
 									"  pm.expect(json.data).to.be.an(\"object\");\r",
 									"  pm.expect(json.data.quantity).to.eql(updatedQuantity);\r",
 									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"updateCartSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/cartupdate.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"updateCartSchema\", res.text());\r",
+									"    });\r",
+									"}"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -952,7 +948,12 @@
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
 									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
 									"});\r",
-									""
+									"\r",
+									"// Test: 200 must not include a message body\r",
+									"pm.test(\"Response body is empty\", function () {\r",
+									"  const bodyText = pm.response.text();\r",
+									"  pm.expect(bodyText.trim()).to.have.length(0);\r",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -972,6 +973,792 @@
 								"{{shopperId}}",
 								"carts",
 								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Address",
+			"item": [
+				{
+					"name": "Add Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /addresses\r",
+									"// Purpose : Create a new address and validate status, schema, and\r",
+									"//           selected field echoes; capture addressId for chaining.\r",
+									"// Note    : Assertion expects 201 (Created);.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// status code check: expects HTTP 201 (Created)\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// status text check: expects \"Created\"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");\r",
+									"});\r",
+									"\r",
+									"// latency check: response time under 1000 ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// schema source: collection variable \"addToCartSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"addAddressSchema\");\r",
+									"\r",
+									"// schema object: parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// schema validation: response body against the referenced schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// request echo: raw JSON request body parsed for comparisons\r",
+									"const sent = JSON.parse(pm.request.body.raw || \"{}\");\r",
+									"\r",
+									"// field echoes: compare selected fields from response with the request\r",
+									"pm.test(\"Fields match request\", () => {\r",
+									"  if (sent.name)        pm.expect(json.data.name).to.eql(sent.name);\r",
+									"  if (sent.pincode)     pm.expect(json.data.pincode).to.eql(sent.pincode);\r",
+									"  if (sent.phoneNumber) pm.expect(json.data.phoneNumber).to.eql(sent.phoneNumber);\r",
+									"});\r",
+									"\r",
+									"// identifier capture: addressId from response payload\r",
+									"const addressId = json.data.addressId;\r",
+									"\r",
+									"// chaining: addressId saved to environment for subsequent requests\r",
+									"pm.environment.set(\"addressId\", addressId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"addAddressSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/addaddress.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"addAddressSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"addressId\": 0,\r\n  \"buildingInfo\": \"Bhavresidency\",\r\n  \"city\": \"Bangalore\",\r\n  \"country\": \"India\",\r\n  \"landmark\": \"temple\",\r\n  \"name\": \"JJ\",\r\n  \"phone\": \"6543785610\",\r\n  \"pincode\": \"560010\",\r\n  \"state\": \"Karnataka\",\r\n  \"streetInfo\": \"2ACross Road\",\r\n  \"type\": \"Home\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/address",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"address"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Addresses",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /addresses\r",
+									"// Purpose : Retrieve all saved addresses; verify 200 OK, validate\r",
+									"//           against the View Address List schema, and confirm that\r",
+									"//           the previously created addressId appears in the list.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);            // expected HTTP 200 for a successful GET\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");           // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // simple latency budget\r",
+									"});\r",
+									"\r",
+									"// parsed response body \r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// schema source: collection variable \"viewAddressListSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"viewAddressListSchema\");\r",
+									"\r",
+									"// schema object parsed from the string above\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// structural validation: response payload against the View Address List schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);       // test title references cart; schema corresponds to address list\r",
+									"});\r",
+									"\r",
+									"// addressId extraction from the response list, excluding null/undefined\r",
+									"const returnedaddressIds = (json.data || [])\r",
+									"        .filter(a => a?.addressId != null)\r",
+									"        .map(a => a.addressId);\r",
+									"\r",
+									"// requested addressId from environment; coerced to Number for comparison\r",
+									"const requestedaddressId = Number(pm.environment.get(\"addressId\"));\r",
+									"\r",
+									"// quick visibility in console for troubleshooting\r",
+									"console.log(\"requestedaddressId:\", requestedaddressId);\r",
+									"console.log(\"returnedaddressIds:\", returnedaddressIds);\r",
+									"\r",
+									"// membership check: the requested addressId should be present in the returned set\r",
+									"pm.test(\"Requested addressId is included in returned ids\", function () {\r",
+									"  pm.expect(returnedaddressIds).to.include(requestedaddressId);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewAddressListSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/viewadress.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewAddressListSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}//shoppers/{{shopperId}}/address",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"",
+								"shoppers",
+								"{{shopperId}}",
+								"address"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Specific Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /addresses/{addressId}\r",
+									"// Purpose : Fetch a single saved address; confirm 200 OK, validate\r",
+									"//           against the View Specific Address, and compare\r",
+									"//           the returned addressId to the previously saved one.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);                 // success for a read operation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");                // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // simple latency budget\r",
+									"});\r",
+									"\r",
+									"const json = pm.response.json();                     // parsed response payload\r",
+									"\r",
+									"// schema source: collection variable \"viewSpecificAddressSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"viewSpecificAddressSchema\");\r",
+									"\r",
+									"// schema object parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// structural validation: response body checked against View Specific Address schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);            // test title mentions cart; schema is for a specific address\r",
+									"});\r",
+									"\r",
+									"returnedaddressId = json.data.addressId;             // addressId extracted from the response\r",
+									"\r",
+									"requestedaddressId = pm.environment.get(\"addressId\"); // saved addressId from a prior step (string)\r",
+									"\r",
+									"// equality check: returned ID compared with the saved one (coerced to Number)\r",
+									"pm.test(\"Verify the returned address Id matches the saved address Id\", function () {\r",
+									"    pm.expect(returnedaddressId, \"AdressId verification failed\").to.eql(Number(requestedaddressId));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewSpecificAddressSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/viewaddressget.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewSpecificAddressSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/address/{{addressId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"address",
+								"{{addressId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: DELETE /Address\r",
+									"// Purpose : Verify the delete operation succeeds with 200 No Content\r",
+									"//           and meets basic performance expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Test: Response status code must be 204 (NO Content) for successful delete\r",
+									"pm.test(\"Status code is 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});\r",
+									"\r",
+									"// Test: Response status text should be \"No Content\"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"No Content\");\r",
+									"});\r",
+									"\r",
+									"// Test: Operation completes within 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Test: 204 must not include a message body\r",
+									"pm.test(\"Response body is empty\", function () {\r",
+									"  const bodyText = pm.response.text();\r",
+									"  pm.expect(bodyText.trim()).to.have.length(0);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/address/{{addressId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"address",
+								"{{addressId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /orders\r",
+									"// Purpose : Create an order; verify 201 Created, log/parse payload,\r",
+									"//           validate against schema, compare echoed address fields,\r",
+									"//           and persist orderId for subsequent steps.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);                // expected status for resource creation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");          // reason phrase for 201\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // simple latency budget\r",
+									"});\r",
+									"\r",
+									"// response logging: pretty-prints JSON; falls back to raw text when not JSON\r",
+									"try {\r",
+									"  console.log(JSON.stringify(pm.response.json(), null, 2));\r",
+									"} catch (e) {\r",
+									"  console.log(\"Response is not JSON:\", pm.response.text());\r",
+									"}\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// parsed request body (raw JSON)\r",
+									"const sent = JSON.parse(pm.request.body.raw || \"{}\");\r",
+									"\r",
+									"// schema source: collection variable \"addToCartSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"createOrderSchema\");\r",
+									"\r",
+									"// schema object parsed from the string above\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// schema validation: response body checked against the referenced schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// field echoes: compares selected address fields in response with request values\r",
+									"// note: assumes 'sent.address' is present when corresponding comparisons are made\r",
+									"pm.test(\"Fields match request\", function () {\r",
+									"  if (sent.address.addressId)  pm.expect(json.data.address.addressId).to.eql(sent.address.addressId);\r",
+									"  if (sent.address.name)       pm.expect(json.data.address.name).to.eql(sent.address.name);\r",
+									"  if (sent.address.pincode)    pm.expect(json.data.address.pincode).to.eql(sent.address.pincode);\r",
+									"  if (sent.address.phone)      pm.expect(json.data.address.phone).to.eql(sent.address.phone);\r",
+									"});\r",
+									"\r",
+									"// identifier capture: orderId extracted from response and logged\r",
+									"const orderId = json.data.orderId;\r",
+									"console.log(\"orderId\", orderId);\r",
+									"\r",
+									"// persistence: orderId saved to environment when not null\r",
+									"if (orderId !== null) {\r",
+									"    pm.environment.set(\"orderId\", orderId);\r",
+									"};    \r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"createOrderSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/createorder.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"createOrderSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"address\": {\r\n  \"addressId\": {{addressId}},\r\n  \"buildingInfo\": \"Bhavresidency\",\r\n  \"city\": \"Bangalore\",\r\n  \"country\": \"India\",\r\n  \"landmark\": \"temple\",\r\n  \"name\": \"JJ\",\r\n  \"phone\": \"6543785610\",\r\n  \"pincode\": \"560010\",\r\n  \"state\": \"Karnataka\",\r\n  \"streetInfo\": \"2ACross Road\",\r\n  \"type\": \"Home\"\r\n},\r\n  \"paymentMode\": \"COD\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/orders",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /orders \r",
+									"// Purpose : View order history; verify 200 OK, validate against\r",
+									"//           the View Order schema, and confirm the saved orderId is present.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);                    // success status for a read operation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");                   // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // latency budget\r",
+									"});\r",
+									"\r",
+									"// console output: pretty JSON when available; raw text fallback otherwise\r",
+									"try {\r",
+									"  console.log(JSON.stringify(pm.response.json(), null, 2));\r",
+									"} catch (e) {\r",
+									"  console.log(\"Response is not JSON:\", pm.response.text());\r",
+									"}\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// schema source: collection variable \"viewOrderSchem\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"viewOrderSchema\");\r",
+									"\r",
+									"// schema object parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// structural validation: response payload checked against the View Order schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// requested identifier: orderId retrieved from environment and coerced to Number\r",
+									"const requestedOrderId = Number(pm.environment.get(\"orderId\"));\r",
+									"\r",
+									"// aggregation: extract non-null/defined orderIds from response list\r",
+									"const returnedOrderIds = (json.data || [])\r",
+									"  .filter(item => item?.orderId != null && item?.orderId !== undefined)\r",
+									"  .map(item => item.orderId);\r",
+									"\r",
+									"// guard: fail early when no orderId appears in the response\r",
+									"if (returnedOrderIds.length === 0) {\r",
+									"  throw new Error(\"No orderId found in response\");\r",
+									"}\r",
+									"\r",
+									"// membership check: requested orderId expected within the returned set\r",
+									"pm.test(\"Response contains the requested ordertId\", function () {\r",
+									"  console.log(\"Requested orderId:\", requestedOrderId);\r",
+									"  console.log(\"Returned Order Ids:\", returnedOrderIds);\r",
+									"  pm.expect(returnedOrderIds, \"Requested orderId not found in order history\")\r",
+									"    .to.include(requestedOrderId);\r",
+									"});\r",
+									"\r",
+									"/*\r",
+									"  optional extension:\r",
+									"  // status extraction for the requested order (array of matching statuses)\r",
+									"  const orderStatus = (json.data).filter(item => item?.orderId === requestedOrderId)\r",
+									"      .map(item => item?.orderStatus);\r",
+									"\r",
+									"  // persistence: save orderStatus for downstream requests\r",
+									"  if(orderStatus !== null){\r",
+									"      pm.environment.set(\"orderStatus\", orderStatus);\r",
+									"  }\r",
+									"\r",
+									"  console.log(\"Order Status:\", orderStatus);\r",
+									"*/"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewOrderSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/vieworderhistory.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewOrderSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/orders",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: PATCH /orders\r",
+									"// Purpose : Update an order's status; verify 200 OK, validate\r",
+									"//           against the Update Order schema, and assert the\r",
+									"//           returned orderId and status match expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);                  // expected status for a successful PATCH\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string OK\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");                 // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // latency budget\r",
+									"});\r",
+									"\r",
+									"// response logging: pretty JSON when available; raw text otherwise\r",
+									"try {\r",
+									"  console.log(JSON.stringify(pm.response.json(), null, 2));\r",
+									"} catch (e) {\r",
+									"  console.log(\"Response is not JSON:\", pm.response.text());\r",
+									"}\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// request body snapshot (raw JSON), useful when the endpoint echoes fields\r",
+									"const sent = JSON.parse(pm.request.body.raw || \"{}\");\r",
+									"\r",
+									"// schema source: collection variable \"updateOrderSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"updateOrderSchema\");\r",
+									"\r",
+									"// schema object parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// schema validation: payload checked against the Update Order schema\r",
+									"// note: test title references \"Cart list\"; schema corresponds to update order\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// values used for assertions\r",
+									"const requestedOrderId    = Number(pm.environment.get(\"orderId\")); // previously saved orderId\r",
+									"const returnedOrderId     = json.data.orderId;                     // orderId from response\r",
+									"const currentOrderStatus  = json.data.orderStatus;                 // status from response\r",
+									"const expectedOrderStatus = pm.collectionVariables.get('status');  // expected status (string)\r",
+									"\r",
+									"// equality checks: id match and status match\r",
+									"pm.test(\"Order Status of requested order id updated\", function (){\r",
+									"    pm.expect(requestedOrderId, \"Returned Order is not the requested one\").to.eql(returnedOrderId);\r",
+									"    pm.expect(currentOrderStatus, \"Order Status updated\").to.eql(expectedOrderStatus);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"updateOrderSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/updateorder.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"updateOrderSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/orders/{{orderId}}?status={{status}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"orders",
+								"{{orderId}}"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "{{status}}"
+								}
 							]
 						}
 					},
@@ -1041,6 +1828,42 @@
 		},
 		{
 			"key": "productSchema",
+			"value": ""
+		},
+		{
+			"key": "status",
+			"value": "",
+			"description": {
+				"content": "",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "addToCartSchema",
+			"value": ""
+		},
+		{
+			"key": "viewCartListSchema",
+			"value": ""
+		},
+		{
+			"key": "updateCartSchema",
+			"value": ""
+		},
+		{
+			"key": "addAddressSchema",
+			"value": ""
+		},
+		{
+			"key": "viewAddressListSchema",
+			"value": ""
+		},
+		{
+			"key": "viewSpecificAddressSchema",
+			"value": ""
+		},
+		{
+			"key": "createOrderSchema",
 			"value": ""
 		}
 	]

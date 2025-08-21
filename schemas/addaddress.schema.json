@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "addressId": {
+          "type": "number"
+        },
+        "buildingInfo": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "landmark": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phone": {
+          "type": "string"
+        },
+        "pincode": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "streetInfo": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "addressId",
+        "city",
+        "country",
+        "landmark",
+        "name",
+        "phone",
+        "pincode",
+        "state",
+        "streetInfo"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "data",
+    "message",
+    "statusCode"
+  ]
+}

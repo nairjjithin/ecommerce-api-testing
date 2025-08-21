@@ -1,0 +1,141 @@
+{
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "actualPrice": {
+            "type": "number"
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "addressId": {
+                "type": "number"
+              },
+              "buildingInfo": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "landmark": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "pincode": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "streetInfo": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "addressId",
+              "buildingInfo",
+              "city",
+              "country",
+              "landmark",
+              "name",
+              "phone",
+              "pincode",
+              "state",
+              "streetInfo",
+              "type"
+            ]
+          },
+          "deliveredDate": {
+            "type": ["string", "null"]
+          },
+          "discountPrice": {
+            "type": "number"
+          },
+          "lastModifiedDate": {
+            "type": "string"
+          },
+          "orderDate": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "number"
+          },
+          "orderStatus": {
+            "type": "string"
+          },
+          "orderedItems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "number"
+                },
+                "quantity": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "productId",
+                "quantity"
+              ]
+            }
+          },
+          "paymentMode": {
+            "type": "string"
+          },
+          "shopperId": {
+            "type": "number"
+          },
+          "totalPrice": {
+            "type": "number"
+          },
+          "transactionId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "actualPrice",
+          "address",
+          "deliveredDate",
+          "discountPrice",
+          "lastModifiedDate",
+          "orderDate",
+          "orderId",
+          "orderStatus",
+          "orderedItems",
+          "paymentMode",
+          "shopperId",
+          "totalPrice",
+          "transactionId"
+        ]
+      }
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "data",
+    "message",
+    "statusCode"
+  ]
+}

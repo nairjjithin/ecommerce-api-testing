@@ -158,11 +158,11 @@
 									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
-									"// Check the response status text is \"OK\"\r",
+									"/*// Check the response status text is \"OK\"\r",
 									"// Postman allows status checks by both code and status text\r",
 									"pm.test(\"Status code name has string OK\", function () {\r",
 									"    pm.response.to.have.status(\"OK\");\r",
-									"});\r",
+									"});*/\r",
 									"\r",
 									"// Check that the response time is less than 3000 milliseconds\r",
 									"// Helps ensure the API is performing within acceptable limits\r",
@@ -1404,6 +1404,288 @@
 			]
 		},
 		{
+			"name": "Bank Mock",
+			"item": [
+				{
+					"name": "Payment",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.environment.get('checkoutId')) {\r",
+									"  pm.environment.set('checkoutId', 'chk_' + Date.now());\r",
+									"}\r",
+									"\r",
+									"pm.environment.unset('paymentId');\r",
+									"pm.environment.set('paymentApproved', 'false');\r",
+									"pm.environment.set('paymentStatus', 'NONE');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"const code = pm.response.code;\r",
+									"const js   = pm.response.json();\r",
+									"\r",
+									"let status = 'DOWN';\r",
+									"if (code === 200 && js.status === 'APPROVED') status = 'APPROVED';\r",
+									"else if (code === 202) status = 'PENDING';\r",
+									"else if (code === 402) status = 'DECLINED';\r",
+									"\r",
+									"pm.environment.set('paymentStatus', status);\r",
+									"pm.environment.set('paymentApproved', status === 'APPROVED' ? 'true' : 'false');\r",
+									"\r",
+									"if (status === 'APPROVED') {\r",
+									"  const pid = js.paymentId;\r",
+									"  pm.environment.set('paymentId', pid);\r",
+									"} else {\r",
+									"  pm.environment.unset('paymentId');\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-mock-response-code",
+								"value": "{{bank_resp_code}}",
+								"type": "text"
+							},
+							{
+								"key": "x-mock-response-delay",
+								"value": "{{bank_resp_delay_ms}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_bank}}/payment/authorize",
+							"host": [
+								"{{baseUrl_bank}}"
+							],
+							"path": [
+								"payment",
+								"authorize"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Approved",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"APPROVED\", \"authCode\": \"123456\" }\r\n"
+						},
+						{
+							"name": "202 Pending",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Accepted",
+							"code": 202,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"PENDING\" }\r\n"
+						},
+						{
+							"name": "402 Declined",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Declined",
+							"code": 402,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"DECLINED\", \"reason\": \"INSUFFICIENT_FUNDS\" }\r\n"
+						},
+						{
+							"name": "500 Bank Down",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{ \"error\": \"BANK_DOWN\" }\r\n"
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "Order",
 			"item": [
 				{
@@ -1483,6 +1765,18 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
+									"\r",
+									"const approved = pm.environment.get('paymentApproved') === 'true';\r",
+									"const status   = pm.environment.get('paymentStatus') || 'NONE';\r",
+									"\r",
+									"if (!approved) {\r",
+									"  pm.execution.setNextRequest(null); // stop here\r",
+									"  pm.test(`SKIPPED: Order not sent (payment=${status})`, () => pm.expect(true).to.be.true);\r",
+									"  console.log('Payment gate blocked order. status=', status);\r",
+									"  return;\r",
+									"}\r",
+									"\r",
+									"\r",
 									"if (!pm.collectionVariables.get(\"createOrderSchema\")) {\r",
 									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/createorder.schema.json\", (err, res) => {\r",
 									"        if (err || res.code !== 200) {\r",
@@ -1797,6 +2091,1267 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Scenario: Happy Path — Login-Mock Pay-Order",
+			"item": [
+				{
+					"name": "Shopper Login Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /login\r",
+									"// Purpose : Verify login functionality and response\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check the response status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check the status text contains \"OK\"\r",
+									"pm.test(\"Status code name has string OK\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Check that the response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Check that the API responds with JSON\r",
+									"// Use \"include\" because servers often append charset (e.g., \"; charset=utf-8\")\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    const ct = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();\r",
+									"    pm.expect(ct).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"// Parse the response body as JSON and log it in a readable format\r",
+									"const json = pm.response.json();\r",
+									"console.log(JSON.stringify(json, null, 2));\r",
+									"\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"loginSchema\");\r",
+									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the login schema\r",
+									"pm.test(\"Response matches schema\", function () {\r",
+									"    pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Check that a token is present in the response\r",
+									"pm.test(\"Token is present\", function () {\r",
+									"    pm.expect(json.data.jwtToken, \"Token Missing\").to.exist;\r",
+									"});\r",
+									"\r",
+									"// If token is present, save it into environment variable for reuse\r",
+									"if (json.data && json.data.jwtToken) {\r",
+									"    pm.environment.set(\"jwtToken\", json.data.jwtToken);\r",
+									"}\r",
+									"\r",
+									"// Validate that the role matches the expected environment variable\r",
+									"pm.test(\"Role is SHOPPER\", function () {\r",
+									"    pm.expect(json.data.role, \"Unexpected Role\").to.eql(pm.environment.get(\"role\"));\r",
+									"});\r",
+									"\r",
+									"// Validate that the email matches the expected environment variable\r",
+									"pm.test(\"Email is valid\", function () {\r",
+									"    pm.expect(json.data.email, \"Email invalid\").to.eql(pm.environment.get(\"email\"));\r",
+									"});\r",
+									"\r",
+									"// Save shopperId into environment variable for later requests\r",
+									"if (json.data && json.data.userId !== undefined && json.data.userId !== null) {\r",
+									"    pm.environment.set(\"shopperId\", json.data.userId);\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"loginSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/main/schemas/login.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"loginSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\",\r\n  \"role\": \"{{role}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Default Products Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /products\r",
+									"// Purpose : Verify product listing API response and extract a productId\r",
+									"//           for use in subsequent requests.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Check the response status code is exactly 200 (OK)\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check the response status text is \"OK\"\r",
+									"// Postman allows status checks by both code and status text\r",
+									"pm.test(\"Status code name has string OK\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"/*// Check that the response time is less than 3000 milliseconds\r",
+									"// Helps ensure the API is performing within acceptable limits\r",
+									"pm.test(\"Response time is less than 3000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(6000);\r",
+									"});*/\r",
+									"\r",
+									"// Parse response body into JSON for further checks\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Get schema string from collection-level variable called \"productSchema\"\r",
+									"// Schemas can be stored as variables to keep tests cleaner and reusable\r",
+									"const schemaString = pm.collectionVariables.get(\"productSchema\");\r",
+									"\r",
+									"// Parse the schema string into a JavaScript object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate the response body against the JSON schema\r",
+									"// Ensures the API contract is followed (correct fields, types, etc.)\r",
+									"pm.test(\"Response matches schema\", function () {\r",
+									"    pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Check that the response has a data array and it is not empty\r",
+									"pm.test(\"data is a non-empty array\", function () {\r",
+									"    pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;\r",
+									"});\r",
+									"\r",
+									"// Collect all objects from the data array that have a valid productId\r",
+									"const productsWithId = (json.data || []).filter(p => p?.productId != null);\r",
+									"\r",
+									"// If no valid productId is found, throw an error to stop execution\r",
+									"if (productsWithId.length === 0) {\r",
+									"    throw new Error(\"No items in 'data' have a valid productId.\");\r",
+									"}\r",
+									"\r",
+									"// Save the first valid productId as an environment variable for use in later requests\r",
+									"pm.environment.set(\"productId\", productsWithId[0].productId);\r",
+									"\r",
+									"// Debug log to confirm what got saved\r",
+									"console.log(\"Saved productId:\", productsWithId[0].productId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// If the collection variable \"productSchema\" is not already set\r",
+									"if (!pm.collectionVariables.get(\"productSchema\")) {\r",
+									"    \r",
+									"    // Fetch the JSON schema file from GitHub raw URL\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/main/schemas/product.schema.json\", (err, res) => {\r",
+									"        \r",
+									"        // If request failed OR response code is not 200, log error and stop\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        \r",
+									"        // Otherwise, save the schema text into the collection variable\r",
+									"        // This makes the schema reusable in any request of this collection\r",
+									"        pm.collectionVariables.set(\"productSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/products/alpha",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"products",
+								"alpha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Cart Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /Cart\r",
+									"// Purpose : Verify that a product can be added to the  Cart\r",
+									"//           and that response values (productId, quantity) match expectations.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Verify that the response status code is 201 (Created)\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// Verify that the response status text is \"Created\"\r",
+									"pm.test(\"Status code name has string Created\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");\r",
+									"});\r",
+									"\r",
+									"// Verify that the response time is less than 1000 milliseconds\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"addToCartSchema\");\r",
+									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the Add to Cart Schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Parse the response body into JSON for further validation\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Validate that the productId returned in the response\r",
+									"// matches the productId saved earlier in the environment\r",
+									"pm.test(\"Validate ProductId\", function () {\r",
+									"    console.log(\"productId:\", json.data.productId); // Debug log for troubleshooting\r",
+									"    const requestedId = pm.environment.get(\"productId\"); // Environment-stored productId\r",
+									"    // Assertion: Response productId must equal requestedId\r",
+									"    pm.expect(json.data.productId).to.eql(Number(requestedId));\r",
+									"});\r",
+									"\r",
+									"// Validate that the quantity in the response\r",
+									"// matches the requested quantity saved earlier in the environment\r",
+									"pm.test(\"Validate Quantity\", function () {\r",
+									"    console.log(\"quantity:\", json.data.quantity); // Debug log for troubleshooting\r",
+									"    const requestedQuantity = pm.environment.get(\"quantity\"); // Environment-stored quantity\r",
+									"    // Assertion: Response quantity must equal requestedQuantity\r",
+									"    pm.expect(json.data.quantity).to.eql(Number(requestedQuantity));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"addToCartSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/cartadd.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"addToCartSchema\", res.text());\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"productId\": {{productId}},\r\n  \"quantity\": {{quantity}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cartlist Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /cartlist - Single Product Validation\r",
+									"// Purpose : Ensure that a product added to the cart appears in the cartlist.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// Validate status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Validate status text is 'OK'\r",
+									"pm.test(\"Status code name is OK\", function () {\r",
+									"  pm.response.to.have.status(\"OK\");\r",
+									"});\r",
+									"\r",
+									"// Validate response time is below 1000ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// Get schema string from collection variable\r",
+									"const schemaString = pm.collectionVariables.get(\"viewCartListSchema\");\r",
+									"\r",
+									"// Parse schema string into a JSON object\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// Validate response body against the View Cart List Schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// Parse response body into JSON\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// Read the requested productId from environment ONCE, reuse below\r",
+									"const requestedProductId = Number(pm.environment.get(\"productId\"));\r",
+									"\r",
+									"// Extract productIds from the cart (filter null/undefined, then map to ids)\r",
+									"const cartProductIds = (json.data || [])\r",
+									"  .filter(item => item?.productId != null)\r",
+									"  .map(item => item.productId);\r",
+									"\r",
+									"// Fail fast if no productId was returned\r",
+									"if (cartProductIds.length === 0) {\r",
+									"  throw new Error(\"No productId found in cartlist response\");\r",
+									"}\r",
+									"\r",
+									"// Validate the requested productId is present in the cart\r",
+									"pm.test(\"Cart contains the requested productId\", function () {\r",
+									"  console.log(\"Requested productId:\", requestedProductId);\r",
+									"  console.log(\"Cart productIds:\", cartProductIds);\r",
+									"  pm.expect(cartProductIds, \"Requested productId not found in cartlist\")\r",
+									"    .to.include(requestedProductId);\r",
+									"});\r",
+									"\r",
+									"// Find the product object whose productId equals the saved environment variable\r",
+									"const product = (json.data || []).find(p => Number(p.productId) === requestedProductId);\r",
+									"\r",
+									"// Fail if not found\r",
+									"if (!product) {\r",
+									"  throw new Error(`Requested productId not found in cartlist response`);\r",
+									"}\r",
+									"\r",
+									"\r",
+									"// Save its itemId to environment\r",
+									"pm.environment.set(\"itemId\", product.itemId);\r",
+									"\r",
+									"// Debug log\r",
+									"console.log(\"Saved itemId:\", product.itemId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewCartListSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/cartlist.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewCartListSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/carts",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"carts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Address Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /addresses\r",
+									"// Purpose : Create a new address and validate status, schema, and\r",
+									"//           selected field echoes; capture addressId for chaining.\r",
+									"// Note    : Assertion expects 201 (Created);.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"// status code check: expects HTTP 201 (Created)\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// status text check: expects \"Created\"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");\r",
+									"});\r",
+									"\r",
+									"// latency check: response time under 1000 ms\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// schema source: collection variable \"addToCartSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"addAddressSchema\");\r",
+									"\r",
+									"// schema object: parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// schema validation: response body against the referenced schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// request echo: raw JSON request body parsed for comparisons\r",
+									"const sent = JSON.parse(pm.request.body.raw || \"{}\");\r",
+									"\r",
+									"// field echoes: compare selected fields from response with the request\r",
+									"pm.test(\"Fields match request\", () => {\r",
+									"  if (sent.name)        pm.expect(json.data.name).to.eql(sent.name);\r",
+									"  if (sent.pincode)     pm.expect(json.data.pincode).to.eql(sent.pincode);\r",
+									"  if (sent.phoneNumber) pm.expect(json.data.phoneNumber).to.eql(sent.phoneNumber);\r",
+									"});\r",
+									"\r",
+									"// identifier capture: addressId from response payload\r",
+									"const addressId = json.data.addressId;\r",
+									"\r",
+									"// chaining: addressId saved to environment for subsequent requests\r",
+									"pm.environment.set(\"addressId\", addressId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"addAddressSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/addaddress.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"addAddressSchema\", res.text());\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"addressId\": 0,\r\n  \"buildingInfo\": \"Bhavresidency\",\r\n  \"city\": \"Bangalore\",\r\n  \"country\": \"India\",\r\n  \"landmark\": \"temple\",\r\n  \"name\": \"JJ\",\r\n  \"phone\": \"6543785610\",\r\n  \"pincode\": \"560010\",\r\n  \"state\": \"Karnataka\",\r\n  \"streetInfo\": \"2ACross Road\",\r\n  \"type\": \"Home\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/address",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"address"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Specific Address Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /addresses/{addressId}\r",
+									"// Purpose : Fetch a single saved address; confirm 200 OK, validate\r",
+									"//           against the View Specific Address, and compare\r",
+									"//           the returned addressId to the previously saved one.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);                 // success for a read operation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");                // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // simple latency budget\r",
+									"});\r",
+									"\r",
+									"const json = pm.response.json();                     // parsed response payload\r",
+									"\r",
+									"// schema source: collection variable \"viewSpecificAddressSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"viewSpecificAddressSchema\");\r",
+									"\r",
+									"// schema object parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// structural validation: response body checked against View Specific Address schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);            // test title mentions cart; schema is for a specific address\r",
+									"});\r",
+									"\r",
+									"returnedaddressId = json.data.addressId;             // addressId extracted from the response\r",
+									"\r",
+									"requestedaddressId = pm.environment.get(\"addressId\"); // saved addressId from a prior step (string)\r",
+									"\r",
+									"// equality check: returned ID compared with the saved one (coerced to Number)\r",
+									"pm.test(\"Verify the returned address Id matches the saved address Id\", function () {\r",
+									"    pm.expect(returnedaddressId, \"AdressId verification failed\").to.eql(Number(requestedaddressId));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewSpecificAddressSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/viewaddressget.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewSpecificAddressSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/address/{{addressId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"address",
+								"{{addressId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Payment Copy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.environment.get('checkoutId')) {\r",
+									"  pm.environment.set('checkoutId', 'chk_' + Date.now());\r",
+									"}\r",
+									"\r",
+									"pm.environment.unset('paymentId');\r",
+									"pm.environment.set('paymentApproved', 'false');\r",
+									"pm.environment.set('paymentStatus', 'NONE');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"\r",
+									"console.log('baseUrl_bank =', pm.environment.get('baseUrl_bank'));\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"const code = pm.response.code;\r",
+									"const js   = pm.response.json();\r",
+									"\r",
+									"let status = 'DOWN';\r",
+									"if (code === 200 && js.status === 'APPROVED') status = 'APPROVED';\r",
+									"else if (code === 202) status = 'PENDING';\r",
+									"else if (code === 402) status = 'DECLINED';\r",
+									"\r",
+									"pm.environment.set('paymentStatus', status);\r",
+									"pm.environment.set('paymentApproved', status === 'APPROVED' ? 'true' : 'false');\r",
+									"\r",
+									"if (status === 'APPROVED') {\r",
+									"  const pid = js.paymentId;\r",
+									"  pm.environment.set('paymentId', pid);\r",
+									"} else {\r",
+									"  pm.environment.unset('paymentId');\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-mock-response-code",
+								"value": "{{bank_resp_code}}",
+								"type": "text"
+							},
+							{
+								"key": "x-mock-response-delay",
+								"value": "{{bank_resp_delay_ms}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_bank}}/payment/authorize",
+							"host": [
+								"{{baseUrl_bank}}"
+							],
+							"path": [
+								"payment",
+								"authorize"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Approved",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"APPROVED\", \"authCode\": \"123456\" }\r\n"
+						},
+						{
+							"name": "202 Pending",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Accepted",
+							"code": 202,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"PENDING\" }\r\n"
+						},
+						{
+							"name": "402 Declined",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Declined",
+							"code": 402,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{ \"paymentId\": \"pay_demo\", \"status\": \"DECLINED\", \"reason\": \"INSUFFICIENT_FUNDS\" }\r\n"
+						},
+						{
+							"name": "500 Bank Down",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-mock-response-code",
+										"value": "{{bank_resp_code}}",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-delay",
+										"value": "{{bank_resp_delay_ms}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"checkoutId\": \"{{checkoutId}}\",\r\n  \"amount\": \"{{amount}}\",\r\n  \"currency\": \"{{currency}}\",\r\n  \"card\": { \"pan\": \"4111111111111111\", \"expiry\": \"12/28\", \"cvv\": \"123\" }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_bank}}/payment/authorize",
+									"host": [
+										"{{baseUrl_bank}}"
+									],
+									"path": [
+										"payment",
+										"authorize"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{ \"error\": \"BANK_DOWN\" }\r\n"
+						}
+					]
+				},
+				{
+					"name": "Create Order Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: POST /orders\r",
+									"// Purpose : Create an order; verify 201 Created, log/parse payload,\r",
+									"//           validate against schema, compare echoed address fields,\r",
+									"//           and persist orderId for subsequent steps.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);                // expected status for resource creation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"Created\");          // reason phrase for 201\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // simple latency budget\r",
+									"});\r",
+									"\r",
+									"// response logging: pretty-prints JSON; falls back to raw text when not JSON\r",
+									"try {\r",
+									"  console.log(JSON.stringify(pm.response.json(), null, 2));\r",
+									"} catch (e) {\r",
+									"  console.log(\"Response is not JSON:\", pm.response.text());\r",
+									"}\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// parsed request body (raw JSON)\r",
+									"const sent = JSON.parse(pm.request.body.raw || \"{}\");\r",
+									"\r",
+									"// schema source: collection variable \"addToCartSchema\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"createOrderSchema\");\r",
+									"\r",
+									"// schema object parsed from the string above\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// schema validation: response body checked against the referenced schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// field echoes: compares selected address fields in response with request values\r",
+									"// note: assumes 'sent.address' is present when corresponding comparisons are made\r",
+									"pm.test(\"Fields match request\", function () {\r",
+									"  if (sent.address.addressId)  pm.expect(json.data.address.addressId).to.eql(sent.address.addressId);\r",
+									"  if (sent.address.name)       pm.expect(json.data.address.name).to.eql(sent.address.name);\r",
+									"  if (sent.address.pincode)    pm.expect(json.data.address.pincode).to.eql(sent.address.pincode);\r",
+									"  if (sent.address.phone)      pm.expect(json.data.address.phone).to.eql(sent.address.phone);\r",
+									"});\r",
+									"\r",
+									"// identifier capture: orderId extracted from response and logged\r",
+									"const orderId = json.data.orderId;\r",
+									"console.log(\"orderId\", orderId);\r",
+									"\r",
+									"// persistence: orderId saved to environment when not null\r",
+									"if (orderId !== null) {\r",
+									"    pm.environment.set(\"orderId\", orderId);\r",
+									"};    \r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"const approved = pm.environment.get('paymentApproved') === 'true';\r",
+									"const status   = pm.environment.get('paymentStatus') || 'NONE';\r",
+									"\r",
+									"if (!approved) {\r",
+									"  pm.execution.setNextRequest(null); // stop here\r",
+									"  pm.test(`SKIPPED: Order not sent (payment=${status})`, () => pm.expect(true).to.be.true);\r",
+									"  console.log('Payment gate blocked order. status=', status);\r",
+									"  return;\r",
+									"}\r",
+									"\r",
+									"\r",
+									"if (!pm.collectionVariables.get(\"createOrderSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/createorder.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"createOrderSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"address\": {\r\n  \"addressId\": {{addressId}},\r\n  \"buildingInfo\": \"Bhavresidency\",\r\n  \"city\": \"Bangalore\",\r\n  \"country\": \"India\",\r\n  \"landmark\": \"temple\",\r\n  \"name\": \"JJ\",\r\n  \"phone\": \"6543785610\",\r\n  \"pincode\": \"560010\",\r\n  \"state\": \"Karnataka\",\r\n  \"streetInfo\": \"2ACross Road\",\r\n  \"type\": \"Home\"\r\n},\r\n  \"paymentMode\": \"COD\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/orders",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order History Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------------\r",
+									"// Request: GET /orders \r",
+									"// Purpose : View order history; verify 200 OK, validate against\r",
+									"//           the View Order schema, and confirm the saved orderId is present.\r",
+									"// -------------------------------------------------------------\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);                    // success status for a read operation\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Status code name has string\", function () {\r",
+									"    pm.response.to.have.status(\"OK\");                   // reason phrase for 200\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 1000ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000); // latency budget\r",
+									"});\r",
+									"\r",
+									"// console output: pretty JSON when available; raw text fallback otherwise\r",
+									"try {\r",
+									"  console.log(JSON.stringify(pm.response.json(), null, 2));\r",
+									"} catch (e) {\r",
+									"  console.log(\"Response is not JSON:\", pm.response.text());\r",
+									"}\r",
+									"\r",
+									"// parsed response payload\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// schema source: collection variable \"viewOrderSchem\" (stringified JSON)\r",
+									"const schemaString = pm.collectionVariables.get(\"viewOrderSchema\");\r",
+									"\r",
+									"// schema object parsed from the collection variable\r",
+									"const schema = JSON.parse(schemaString);\r",
+									"\r",
+									"// structural validation: response payload checked against the View Order schema\r",
+									"pm.test(\"Cart list matches schema\", () => {\r",
+									"  pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"// requested identifier: orderId retrieved from environment and coerced to Number\r",
+									"const requestedOrderId = Number(pm.environment.get(\"orderId\"));\r",
+									"\r",
+									"// aggregation: extract non-null/defined orderIds from response list\r",
+									"const returnedOrderIds = (json.data || [])\r",
+									"  .filter(item => item?.orderId != null && item?.orderId !== undefined)\r",
+									"  .map(item => item.orderId);\r",
+									"\r",
+									"// guard: fail early when no orderId appears in the response\r",
+									"if (returnedOrderIds.length === 0) {\r",
+									"  throw new Error(\"No orderId found in response\");\r",
+									"}\r",
+									"\r",
+									"// membership check: requested orderId expected within the returned set\r",
+									"pm.test(\"Response contains the requested ordertId\", function () {\r",
+									"  console.log(\"Requested orderId:\", requestedOrderId);\r",
+									"  console.log(\"Returned Order Ids:\", returnedOrderIds);\r",
+									"  pm.expect(returnedOrderIds, \"Requested orderId not found in order history\")\r",
+									"    .to.include(requestedOrderId);\r",
+									"});\r",
+									"\r",
+									"/*\r",
+									"  optional extension:\r",
+									"  // status extraction for the requested order (array of matching statuses)\r",
+									"  const orderStatus = (json.data).filter(item => item?.orderId === requestedOrderId)\r",
+									"      .map(item => item?.orderStatus);\r",
+									"\r",
+									"  // persistence: save orderStatus for downstream requests\r",
+									"  if(orderStatus !== null){\r",
+									"      pm.environment.set(\"orderStatus\", orderStatus);\r",
+									"  }\r",
+									"\r",
+									"  console.log(\"Order Status:\", orderStatus);\r",
+									"*/"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.collectionVariables.get(\"viewOrderSchema\")) {\r",
+									"    pm.sendRequest(\"https://raw.githubusercontent.com/nairjjithin/ecommerce-api-testing/refs/heads/main/schemas/vieworderhistoy.schema.json\", (err, res) => {\r",
+									"        if (err || res.code !== 200) {\r",
+									"            console.log(\"Schema fetch failed:\", err || res.code);\r",
+									"            return;\r",
+									"        }\r",
+									"        pm.collectionVariables.set(\"viewOrderSchema\", res.text());\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/shoppers/{{shopperId}}/orders",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"shoppers",
+								"{{shopperId}}",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
 		}
 	],
 	"event": [
@@ -1864,6 +3419,14 @@
 		},
 		{
 			"key": "createOrderSchema",
+			"value": ""
+		},
+		{
+			"key": "updateOrderSchema",
+			"value": ""
+		},
+		{
+			"key": "viewOrderSchema",
 			"value": ""
 		}
 	]

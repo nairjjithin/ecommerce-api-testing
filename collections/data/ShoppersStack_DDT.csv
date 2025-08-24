@@ -1,0 +1,11 @@
+email,password,role,qauntity,bank_resp_code,Expectation,Test
+jith@gmail.com,xyz123#J,SHOPPER,2,200,Fail,Invalid email
+xyz@gmail.com,xyz,SHOPPER,2,200,Fail,Invalid Password
+xyz@gmail.com,xyz123#J,ADMIN,2,200,Fail,Invalid Role
+jith@gmail.com,xyz,ADMIN,2,200,Fail,Invalid email & Password & Role
+xyz@gmail.com,xyz123#J,SHOPPER,0,200,Fail,Invalid quantity
+xyz@gmail.com,xyz123#J,SHOPPER,2,202,Fail,Orer Creation Failure-Payment in Process
+xyz@gmail.com,xyz123#J,SHOPPER,2,402,Fail,Order Creation Failure-Payment Declined
+xyz@gmail.com,xyz123#J,SHOPPER,2,500,Fail,Order Creation Failure-Bank Server Down
+xyz@gmail.com,xyz123#J,SHOPPER,2,200,Pass,Order Creation Successful
+xyz@gmail.com,xyz123#J,SHOPPER,2,200,Pass,Order Creation Successful

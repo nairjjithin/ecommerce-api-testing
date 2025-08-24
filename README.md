@@ -54,8 +54,7 @@ This project includes mocking, schema validation, data-driven testing, and HTML 
 │ └── data/
 │ └── ShoppersStack_data.csv
 ├── schemas/ # JSON schemas for response validation
-├── reports/ # Newman output (html, junit, etc.)
-└── README.md
+├── reports
 
 
 ## How to Run Locally
@@ -91,7 +90,7 @@ Screenshots
 <img width="1080" height="885" alt="image" src="https://github.com/user-attachments/assets/cc896a53-e94a-4af2-bb78-c026304e44fb" />
 
 
-Future Enhancements
+## Future Enhancements
 Jenkins CI/CD integration to run tests automatically on commit or schedule.
 
 JUnit report generation for Jenkins test trends.
@@ -100,7 +99,7 @@ Monitoring and alerting (Slack/email) for test failures.
 
 More advanced mocking and additional negative scenarios.
 
-Skills Demonstrated
+## Skills Demonstrated
 API testing with Postman and Newman
 
 Mock server setup for dependency isolation

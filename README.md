@@ -48,6 +48,7 @@ This project includes mocking, schema validation, data-driven testing, and HTML 
 ---
 
 ## Project Structure
+```
 ├── collections/
 │ ├── ShoppersStack API Testing.postman_collection.json
 │ ├── ShoppersStack_Staging.postman_environment.json
@@ -55,7 +56,7 @@ This project includes mocking, schema validation, data-driven testing, and HTML 
 │ └── ShoppersStack_data.csv
 ├── schemas/ # JSON schemas for response validation
 ├── reports
-
+```
 
 ## How to Run Locally
 
